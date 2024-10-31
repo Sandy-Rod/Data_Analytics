@@ -9,21 +9,32 @@ SELECT DISTINCT(c.country) as País
 			ON t.company_id = c.id;
             
             
+            
+            
+            
 #Exercici 2.2: Des de quants països es realitzen les compres.
 SELECT COUNT(DISTINCT(c.country)) as Total_Paises
 	FROM transaction t 
     INNER JOIN company c
 			ON t.company_id = c.id;
-            
+		
+        
+        
+       
+        
             
 #Exercici 2.3: Identifica la companyia amb la mitjana més gran de vendes.
-SELECT c.country as País 
-	, AVG(t.amount) as Media
+SELECT c.company_name as Compañia 
+	, ROUND(AVG(t.amount), 2) as Media
 	FROM transaction t 
     INNER JOIN company c
 			ON t.company_id = c.id
-	GROUP BY c.country
-    ORDER BY Media;
+	GROUP BY c.company_name
+    ORDER BY Media DESC
+    LIMIT 1;
+    
+    
+    
     
     
 
@@ -36,6 +47,8 @@ SELECT *
                             WHERE country = "Germany");
 
 
+
+
 #Exercici 3.2: Llista les empreses que han realitzat transaccions per un amount superior a la mitjana de totes les transaccions.
 SELECT company_name
 	, country
@@ -44,6 +57,8 @@ SELECT company_name
 							FROM  transaction
                             WHERE amount > (SELECT AVG(amount) 
 												FROM transaction));
+
+
 
 
 # Exercici 3.3: Eliminaran del sistema les empreses que no tenen transaccions registrades, entrega el llistat d'aquestes empreses.
@@ -62,9 +77,13 @@ SELECT *
 SELECT date(timestamp) as Fecha
 	, SUM(amount) as Total
 	FROM transaction
+    WHERE declined = 0
     GROUP BY date(timestamp)
     ORDER BY Total DESC
     LIMIT 5;
+
+
+
 
 
 #Exercici 2: Quina és la mitjana de vendes per país? Presenta els resultats ordenats de major a menor mitjà.
@@ -74,8 +93,10 @@ SELECT AVG(amount) as Mediana
 	FROM transaction t
     INNER JOIN company c 
 			ON t.company_id = c.id
+	WHERE t.declined = 0
     GROUP BY c.country
-    ORDER BY Mediana;
+    ORDER BY Mediana DESC;
+
 
 
 
@@ -93,6 +114,9 @@ SELECT *
 						WHERE company_name = "Non Institute"
 						);
 						
+
+
+
 
 
 #    Mostra el llistat aplicant solament subconsultes.
@@ -123,10 +147,12 @@ SELECT c.company_name
     INNER JOIN transaction t
 			ON c.id = t.company_id
 	WHERE (t.amount BETWEEN 100 AND 200) AND
-		((date(timestamp) = '2021-04-29') OR
-		(date(timestamp) = '2021-07-20') OR
-		(date(timestamp) = '2022-03-13'))
+		(date(timestamp) IN ('2021-04-29', '2021-07-20', '2022-03-13'))
     ORDER BY t.amount;          
+
+
+
+
 
 
 #Exercici 2: Necessitem optimitzar l'assignació dels recursos i dependrà de la capacitat operativa que es requereixi, per la qual cosa et demanen la informació 
@@ -136,11 +162,13 @@ SELECT c.company_name
 SELECT t.company_id
 	, c.company_name
 	, COUNT(t.amount) as N_Transacciones
-    , IF (COUNT(t.amount) > 4, "SI", "NO") as Más_de_4_transacciones
+    , IF (COUNT(t.amount) >= 4, "SI", "NO") as Más_de_4_transacciones
 	FROM transaction t
 	INNER JOIN company c
 			ON c.id = t.company_id
     GROUP BY company_id
+
+
 
 
 

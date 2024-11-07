@@ -19,10 +19,14 @@ CREATE INDEX Index_Credit_Card ON transaction(credit_card_id);
 
 CREATE INDEX Index_Id ON credit_card(id);
     
-ALTER TABLE credit_card
-ADD CONSTRAINT FK_Transaction
-FOREIGN KEY (id) REFERENCES transaction(credit_card_id);     
+ALTER TABLE transaction
+ADD CONSTRAINT FK_Transaction_CreditCard
+FOREIGN KEY (credit_card_id) REFERENCES credit_card(id);     
 			
+            
+            
+            
+            
 
 
 
@@ -37,7 +41,9 @@ UPDATE credit_card
 SET iban = 'R323456312213576817699999'
 WHERE id = 'CcU-2938'; 
 
-select * from credit_card WHERE id='CcU-2938';
+SELECT * 
+	FROM credit_card 
+    WHERE id='CcU-2938';
 
 
 
@@ -86,32 +92,64 @@ SET foreign_key_checks = 1;
 #VistaMarketing que contingui la següent informació: Nom de la companyia. Telèfon de contacte. 
 #País de residència. Mitjana de compra realitzat per cada companyia. Presenta la vista creada, ordenant les dades de major a menor mitjana de compra.
 
-CREATE VIEW VistaMarketing AS
-SELECT company_name
-	, phone
-    , country
-    , AVG(t.amount) AS Mitjana
-FROM company c
-INNER JOIN transaction t
-		ON c.id = t. company_id
-GROUP BY c.id
-ORDER BY Mitjana DESC;
-        
-        
+CREATE OR REPLACE VIEW VistaMarketing AS
+SELECT company_name AS Nom_Companyia
+	, c.phone AS Telefon_Companyia
+    , country AS Pais_Companyia
+    , company_id 
+	, ROUND(AVG(t.amount), 2) AS Media_Total
+	FROM transaction t
+    INNER JOIN company c
+			ON t.company_id = c.id
+	WHERE declined = 0
+	GROUP BY t.amount;
+
+    
+    
+SELECT *
+	FROM vistamarketing 
+ORDER BY Media_Total DESC;
+
+
+
+
+
 
 
 #Exercici 3: Filtra la vista VistaMarketing per a mostrar només les companyies que tenen el seu país de residència en "Germany"
 
-
-
+SELECT * 
+	FROM vistamarketing 
+    WHERE Pais_Companyia = 'Germany';
+    
 
 ############################################################ NIVEL 3 ################################################################
 
 #Exercici 1: La setmana vinent tindràs una nova reunió amb els gerents de màrqueting. Un company del teu equip va realitzar modificacions en la base de dades, 
 #però no recorda com les va realitzar. 
 
-#cargo el fichero estructura_datos_user.sql
-#cargo el fichero datos_introducir_user (1).sql
+	#cargo el fichero estructura_datos_user.sql
+	#cargo el fichero datos_introducir_user (1).sql
+
+#SENTENCIAS EJECUTADAS
+
+#TABLA COMPANY
+ALTER TABLE company
+DROP COLUMN website;
+
+#TABLA USER
+ALTER TABLE user
+RENAME data_user;
+
+ALTER TABLE data_user
+RENAME COLUMN email to personal_email;
+
+#TABLA CREDIT_CARD
+ALTER TABLE credit_card
+ADD fecha_actual DATE;
+
+
+
 
 
 
@@ -123,14 +161,14 @@ ORDER BY Mitjana DESC;
     #Nom de la companyia de la transacció realitzada.
     #Assegura't d'incloure informació rellevant de totes dues taules i utilitza àlies per a canviar de nom columnes segons sigui necessari.
 
-
-CREATE VIEW InformeTecnico AS
+CREATE OR REPLACE VIEW InformeTecnico AS
 SELECT t.id as ID_Transacció
 	, u.name as Nom_Usuari
     , u.surname as Cognom_Usuari
 	, cc.iban as IBAN_Targeta_Credit
     , co.company_name as Nom_Companyia
     , co.country as Pais_Companyia
+    ,IF (declined = 0, "No", "Si") as Pagament_Rebutjat
 	FROM transaction t
     INNER JOIN transactionsIT.user u
 			ON t.user_id = u.id
@@ -140,11 +178,36 @@ SELECT t.id as ID_Transacció
 			ON co.id = t.company_id;
 
 
+
+
+
+
+
+
+
+
 #Mostra els resultats de la vista, ordena els resultats de manera descendent en funció de la variable ID de transaction.
 
 SELECT * 
 	FROM informetecnico
     ORDER BY ID_Transacció DESC;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

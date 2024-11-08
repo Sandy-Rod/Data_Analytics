@@ -69,19 +69,8 @@ DROP COLUMN pan;
 
 #Exercici 1: Elimina de la taula transaction el registre amb ID 02C6201E-D90A-1859-B4EE-88D2986D3B02 de la base de dades.
 
-SELECT ＊ FROM transaction WHERE id='82C6281E-099A-1859-84EE-880298603802';
-
-# desactivamos a opción de verificar las restricciones de clave foranea para Las tablas
-SET foreign_key_checks = 0;
-
-#ahora si puedo elininar el registro
-DELETE FROM transaction WHERE id='82C6281E-099A-1859-84EE-880298603802';
-
-#compruebo que ya no existe el registro
-SELECT ＊ FROM transaction WHERE id='82C6201E-0991-1859-84EE-8802986D3882';
-
-#activo la opcion de verificar als resticciones de clave foranea para Las tabLas
-SET foreign_key_checks = 1;
+DELETE FROM transaction 
+WHERE id = '02C6201E-D90A-1859-B4EE-88D2986D3B02';
 
 
 

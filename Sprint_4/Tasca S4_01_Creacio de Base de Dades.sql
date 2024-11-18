@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS transaction_products (
 
 
 
-	# Sepero los ids de productos, los trato como un registro por fila. Obtengo el id de transacción y un id de producto por cada fila
+	# Separo los ids de productos, los trato como un registro por fila. Obtengo el id de transacción y un id de producto por cada fila
 INSERT INTO transaction_products (transaction_id, product_id)
 	SELECT id AS transaction_id
 			, CAST(product_list.product_id AS UNSIGNED) AS product_id
@@ -191,6 +191,20 @@ INSERT INTO transaction_products (transaction_id, product_id)
 
 
 
+#	Exercici 1
+
+# Necessitem conèixer el nombre de vegades que s'ha venut cada producte.
+
+SELECT product_name
+	, COUNT(product_id) AS total_producto
+	FROM transaction_products tp
+    INNER JOIN transactions t
+			ON tp.transaction_id = t.id
+	INNER JOIN products p
+			ON tp.product_id = p.id
+	WHERE t.declined = 0
+    GROUP BY product_id
+    ORDER BY total_producto;
 
 
 
@@ -202,18 +216,6 @@ INSERT INTO transaction_products (transaction_id, product_id)
 
 
 
-
-
-
-
-
-
-
-SELECT * FROM credit_card;
-SELECT * FROM transactions;
-SELECT * FROM companies;
-SELECT * FROM products;
-SELECT * FROM users;
 
 
 

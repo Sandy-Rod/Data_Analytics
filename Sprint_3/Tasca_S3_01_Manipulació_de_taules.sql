@@ -15,18 +15,11 @@ CREATE TABLE IF NOT EXISTS credit_card (
         expiring_date VARCHAR(8)
     );
 
-CREATE INDEX Index_Credit_Card ON transaction(credit_card_id);       
-
-CREATE INDEX Index_Id ON credit_card(id);
     
 ALTER TABLE transaction
 ADD CONSTRAINT FK_Transaction_CreditCard
 FOREIGN KEY (credit_card_id) REFERENCES credit_card(id);     
 			
-            
-            
-            
-            
 
 
 
@@ -47,12 +40,35 @@ SELECT *
 
 
 
-
 # Exercici3: En la taula "transaction" ingressa un nou usuari 
-INSERT INTO transaction (id, credit_card_id, company_id, user_id, lat, longitude, amount, declined)
-				VALUES ('108B1D1D-5B23-A76C-55EF-C568E49A99DD', 'CcU-9999', 'b-9999', 9999, 829.999, -117.999, 111.11, 0);
 
-#Da error porque la compañía ‘b-9999’ no existe, en la tabla credit_card no existe el registro ‘CcU-9999’.
+	# Si creo un registro en la tabla transaction da error porque no existe la compañia b-9999 y en la tabla credit_car no existe el registro CcU-9999
+
+	#primero creo el registro en la tabla company
+INSERT INTO company (id, company_name, phone, email, country, website) 
+			VALUES ('b-9999', 'Sprint_2', '99 99 99 99 99', 'sprint_2@yahoo.net', 'Spain', 'https://sprint2.com/site');
+	
+    
+    #ahora creo el registro en la tabla credit_card 
+INSERT INTO credit_card (id, iban, pin, cvv, expiring_date) 
+			VALUES ('CcU-9999', 'TR999999999999999999999999', '9999', '999', '09/09/99');
+            
+	
+    # continuo con la creación de un usuario
+INSERT INTO user (id, name, surname, phone, email, birth_date, country, city, postal_code, address) 
+			VALUES ("9999", "Sprint", "Sprint_3", "9-999-999-9999", "sprint_3@protonmail.edu", "Nov 17, 1985",  "Spain", "Lowell", "99999", "348-7818 Sagittis St.");
+
+            
+	#ahora que tengo creado los registros, puedo hacer un insert en la tabla transaction
+INSERT INTO transaction (id, credit_card_id, company_id, user_id, lat, longitude, amount, declined)
+			VALUES ('108B1D1D-5B23-A76C-55EF-C568E49A99DD', 'CcU-9999', 'b-9999', 9999, 829.999, -117.999, 111.11, 0);
+
+
+# Compruebo con un select la creación del registro
+SELECT *
+	FROM transaction
+    WHERE id = '108B1D1D-5B23-A76C-55EF-C568E49A99DD';
+
 
 
 
@@ -82,24 +98,22 @@ WHERE id = '02C6201E-D90A-1859-B4EE-88D2986D3B02';
 #País de residència. Mitjana de compra realitzat per cada companyia. Presenta la vista creada, ordenant les dades de major a menor mitjana de compra.
 
 CREATE OR REPLACE VIEW VistaMarketing AS
-SELECT company_name AS Nom_Companyia
+SELECT c.company_name AS Nom_Companyia
 	, c.phone AS Telefon_Companyia
-    , country AS Pais_Companyia
-    , company_id 
+    , c.country AS Pais_Companyia
+    , t.company_id AS Id_Companyia
 	, ROUND(AVG(t.amount), 2) AS Media_Total
 	FROM transaction t
     INNER JOIN company c
 			ON t.company_id = c.id
 	WHERE declined = 0
-	GROUP BY t.amount;
-
+	GROUP BY t.company_id;
     
     
+# Compruebo la vista creada
 SELECT *
-	FROM vistamarketing 
-ORDER BY Media_Total DESC;
-
-
+	FROM vistamarketing
+    ORDER BY Media_Total DESC;
 
 
 
@@ -112,6 +126,12 @@ SELECT *
     WHERE Pais_Companyia = 'Germany';
     
 
+    
+    
+    
+    
+    
+
 ############################################################ NIVEL 3 ################################################################
 
 #Exercici 1: La setmana vinent tindràs una nova reunió amb els gerents de màrqueting. Un company del teu equip va realitzar modificacions en la base de dades, 
@@ -120,22 +140,46 @@ SELECT *
 	#cargo el fichero estructura_datos_user.sql
 	#cargo el fichero datos_introducir_user (1).sql
 
-#SENTENCIAS EJECUTADAS
 
-#TABLA COMPANY
+##### TABLA COMPANY
+
 ALTER TABLE company
 DROP COLUMN website;
 
-#TABLA USER
+SELECT * FROM company;
+
+
+
+
+
+##### TABLA USER
+
 ALTER TABLE user
 RENAME data_user;
+
+SELECT * FROM data_user;
+
+
+
+
+## Cambio el nombre de la columna email por el nombre de personal_email
 
 ALTER TABLE data_user
 RENAME COLUMN email to personal_email;
 
-#TABLA CREDIT_CARD
+
+SELECT *
+	FROM data_user;
+
+
+
+
+
+##### TABLA CREDIT_CARD
+
 ALTER TABLE credit_card
-ADD fecha_actual DATE;
+ADD COLUMN fecha_actual DATE DEFAULT (CURDATE());
+
 
 
 
@@ -159,7 +203,7 @@ SELECT t.id as ID_Transacció
     , co.country as Pais_Companyia
     ,IF (declined = 0, "No", "Si") as Pagament_Rebutjat
 	FROM transaction t
-    INNER JOIN transactionsIT.user u
+    INNER JOIN transactionsIT.data_user u
 			ON t.user_id = u.id
 	INNER JOIN credit_card cc
 			ON cc.id = t.credit_card_id
@@ -172,28 +216,11 @@ SELECT t.id as ID_Transacció
 
 
 
-
-
-
 #Mostra els resultats de la vista, ordena els resultats de manera descendent en funció de la variable ID de transaction.
 
 SELECT * 
 	FROM informetecnico
     ORDER BY ID_Transacció DESC;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

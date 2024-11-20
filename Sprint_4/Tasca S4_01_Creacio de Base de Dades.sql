@@ -175,8 +175,9 @@ INSERT INTO transaction_products (transaction_id, product_id)
 		FROM transactions
 		JOIN 
 			JSON_TABLE(
-				CONCAT('["', REPLACE(product_ids, ',', '","'), '"]'), "$[*]" COLUMNS(product_id INT PATH "$")
+				CONCAT('["', REPLACE(product_ids, ',', '","'), '"]'), "$[*]" COLUMNS(product_id INT PATH "$") 
 			) AS product_list;
+
 
 		
 

@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 CREATE TABLE IF NOT EXISTS credit_card (
-    id 				VARCHAR(20) PRIMARY KEY UNIQUE,
+    id 				VARCHAR(20) PRIMARY KEY,
     user_id 		INT,
     iban 			VARCHAR(100),
     pan 			VARCHAR(30),
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS credit_card (
 
 
 CREATE TABLE IF NOT EXISTS transactions (
-	id				VARCHAR(100) PRIMARY KEY UNIQUE,
+	id				VARCHAR(100) PRIMARY KEY,
     card_id			VARCHAR(20),
     business_id		VARCHAR(255),
     timestamp		TIMESTAMP,
@@ -63,50 +63,45 @@ CREATE TABLE IF NOT EXISTS transactions (
 #	Exercici 1
 # Realitza una subconsulta que mostri tots els usuaris amb més de 30 transaccions utilitzant almenys 2 taules.
 
-SELECT u.name_user
-	, u.surname
-    , u.country
-	,COUNT(t.user_id) AS total_transacciones
-	FROM transactions t
-    INNER JOIN users u
-			ON t.user_id = u.id
-	GROUP BY t.user_id
-    HAVING total_transacciones > 30
-    ORDER BY total_transacciones DESC;
+
+SELECT name_user
+	, surname
+    , country
+	FROM users
+    WHERE id IN ( SELECT user_id
+						FROM  transactions
+                        GROUP BY user_id
+						HAVING (COUNT(user_id) >30)
+                        );
+
 
 
 
 
 #	Exercici 2
 # Mostra la mitjana d'amount per IBAN de les targetes de crèdit a la companyia Donec Ltd, utilitza almenys 2 taules.
+#con subquery
 
-
-
-SELECT c.company_name AS Company_Name
-	, ROUND(AVG(t.amount),2) AS Media
-	FROM companies c
-    INNER JOIN transactions t
-			ON c.id = t.business_id
-    INNER JOIN credit_card cc
-			ON cc.id = t.card_id
-	WHERE c.company_name = "Donec Ltd"
-    GROUP BY cc.iban;
-	
+SELECT ROUND(AVG(amount),2) AS Media
+	FROM transactions
+    WHERE business_id IN ( SELECT id
+							FROM companies c
+                            WHERE company_name = 'Donec Ltd');
 
 
 
 
 ############################################################ NIVEL 2 ################################################################
 
-## Crea una nova taula que reflecteixi l'estat de les targetes de crèdit basat en si les últimes tres transaccions van ser declinades i genera la següent consulta:
+## Crea una nova taula que reflecteixi l'estat de les targetes de crèdit basat en si les últimes tres transaccions 
+#van ser declinades i genera la següent consulta:
 
+	#OBTENGO LAS TARGETAS EN ORDEN DESC DE FECHAS, LA COLUMNA DECLINES Y LA EL ID, AGRUPADAS POR CARD_ID
 
-#OBTENGO LAS TARGETAS EN ORDEN DESC DE FECHAS, LA COLUMNA DECLINES Y LA EL ID, AGRUPADAS POR CARD_ID
-
+DROP TABLE IF EXISTS estado_tarjetas;
 CREATE TABLE estado_tarjetas AS
 	WITH ranking_transaction AS (
 		SELECT card_id
-				, credit_card.expiring_date
 				, declined
 				, timestamp
 				,  ROW_NUMBER() OVER(PARTITION BY card_id ORDER BY timestamp DESC) AS ranking
@@ -119,26 +114,26 @@ CREATE TABLE estado_tarjetas AS
 
 	# FILTRO SI ALGUNA DE LAS ULTIMAS 3 TRANSACCIONES HA SIDO RECHAZADA
 	SELECT card_id
-		, expiring_date
-		, IF (SUM(declined)>0, "Si", "No") AS Declinada
+		, IF (SUM(declined)>=3, "No", "Si") AS Activas
 		FROM ranking_transaction
 		WHERE ranking <=3
 		GROUP BY card_id
 		ORDER BY card_id DESC;
 
+#Creacion 
+ALTER TABLE estado_tarjetas
+ADD CONSTRAINT FK_CreditCard_Estado
+FOREIGN KEY (card_id)
+REFERENCES credit_card (id);
+
 
 
 #	Exercici 1
+
 #Quantes targetes estan actives?
-
-		### primero paso el formato de fecha actual a DATE (YYYY-MM-DD) con la función SRT_TO_DATE, pasa de string a DATE
-		### obtengo todas los campos mayor a CURRENT_DATE, que es la fecha actual
-
-SELECT COUNT(*) AS Tarjetas_Activas
+SELECT COUNT(*) AS Estan_Activas
 	FROM estado_tarjetas
-    WHERE STR_TO_DATE(expiring_date, '%d/%m/%y') > CURRENT_DATE();
-
-
+    WHERE Activas = 'Si';
 
 
 
@@ -183,18 +178,12 @@ INSERT INTO transaction_products (transaction_id, product_id)
 				CONCAT('["', REPLACE(product_ids, ',', '","'), '"]'), "$[*]" COLUMNS(product_id INT PATH "$")
 			) AS product_list;
 
-
-
-
-
-
-
-
+		
 
 #	Exercici 1
 
 # Necessitem conèixer el nombre de vegades que s'ha venut cada producte.
-
+	#tengo en cuenta la columna declined, porque se necesita saber las ventas. 
 SELECT product_name
 	, COUNT(product_id) AS total_producto
 	FROM transaction_products tp
@@ -205,18 +194,8 @@ SELECT product_name
 	WHERE t.declined = 0
     GROUP BY product_id
     ORDER BY total_producto;
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    
 
 
 
